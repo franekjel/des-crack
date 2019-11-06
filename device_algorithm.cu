@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "constants.h"
+#include "device_constants.h"
 
 __global__ void kernel()
 {

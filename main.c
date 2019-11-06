@@ -1,5 +1,5 @@
-#include "cpu_algorithms.h"
-#include "kernel.cu"
+#include "cpu_algorithm.h"
+#include "device_algorithm.cu"
 
 #include <time.h>
 #include <unistd.h>
