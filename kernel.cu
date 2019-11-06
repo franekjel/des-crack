@@ -1,21 +1,14 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <stdint.h>
+#include <stdio.h>
 
-__global__ void kernel(){
+#include "constants.h"
+
+__global__ void kernel()
+{
 }
 
-
-void crackDes() {
-
+void crackDES(uint64_t encrypted, uint64_t decrypted)
+{
 }
-
-
-
-
-
-
-
-
-
-
-

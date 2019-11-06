@@ -1,16 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
-project(des-crack LANGUAGES C CUDA)
-
+project(des-crack LANGUAGES C)
+enable_language(CUDA)
 include_directories(/opt/cuda/include)
 
 set(CMAKE_COLOR_MAKEFILE ON)
+set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+set(CMAKE_CUDA_COMPILER /opt/cuda/bin/nvcc)
+set(CUDA_NVCC_FLAGS -arch=sm_61;-G;-g;-rdc=true)
 
-set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR})
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-
-
-include_directories(include)
 file(GLOB SOURCES "main.c" "*.c" "*.cu" "*.h")
 add_executable(${PROJECT_NAME} ${SOURCES})
 
