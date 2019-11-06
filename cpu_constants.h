@@ -8,7 +8,7 @@ I modified some tables (-1 to indexes)
 #include <stdint.h>
 
 extern uint8_t host_PC1[56];
-extern uint8_t host_SHIFT[17];
+extern uint8_t host_SHIFT[16];
 extern uint8_t host_PC2[48];
 extern uint8_t host_IP[64];
 extern uint8_t host_E_BIT[48];
