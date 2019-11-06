@@ -8,15 +8,14 @@ __no_return__ void usage(char* pname)
 {
     fprintf(stderr, "USAGE: %s [OPTIONS] - crack DES using CUDA\n\n\
 -e <64byte>: encrypted message to decrypt\n\
--k <56byte>: DES key\n\
+-k <64byte>: DES key\n\
 -d <64byte>: decrypted message\n\
 64byte means 64-byte hex number, like 6c6f6e6b0da074c8 (16 digits, [0-9a-f])\n\
-Notice that DES key have only 56 bits (14 hexadecimal digits)\n\
 In case of missing parameters program will generate random numbers\n\n\
 Example:\n\
 %s -e 6c6f6e6b0da074c8 -d 797d226c6f6a6b00    will find key which encrypt second argument into first\n\
 %s    with no parameters program will generate random data and try to break it\n\
-%s -k 12fa8335bb82c2    program will generate random encrypted and decrypted message using key, and then try to crack they (useful to measure performance)",
+%s -k 12fa8335b83b82c2    program will generate random encrypted and decrypted message using key, and then try to crack they (useful to measure performance)",
         pname, pname, pname, pname);
     exit(EXIT_FAILURE);
 }
