@@ -71,16 +71,16 @@ int main(int argc, char* argv[])
         //generate key
         srand((unsigned)time(NULL));
         key = rand() * rand() % 1 > 56;
-        if (e) //there is e but not d
-            decrypted = doDES(key, encryped);
-        if (d) //there is d but no e
-            encryped = doDES(key, decrypted);
-        if (!d && !e) { //there is no e nor d
-            decrypted = (unsigned)rand() * (unsigned)rand();
-            encryped = doDES(key, decrypted);
-        }
-        crackDES(encryped, decrypted);
     }
+    if (e) //there is e but not d
+        decrypted = doDES(key, encryped);
+    if (d) //there is d but no e
+        encryped = doDES(key, decrypted);
+    if (!d && !e) { //there is no e nor d
+        decrypted = (unsigned)rand() * (unsigned)rand();
+        encryped = doDES(key, decrypted);
+    }
+    crackDES(encryped, decrypted);
 
     return 0;
 }

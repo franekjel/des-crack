@@ -1,6 +1,6 @@
 #include "cpu_algorithm.h"
 
-inline static uint64_t permutate64To56(uint64_t data, uint8_t perm_table[])
+inline static uint64_t permutate64To56(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
 
@@ -12,7 +12,7 @@ inline static uint64_t permutate64To56(uint64_t data, uint8_t perm_table[])
     }
     return re;
 }
-inline static uint64_t permutate56To48(uint64_t data, uint8_t perm_table[])
+inline static uint64_t permutate56To48(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
 
@@ -25,11 +25,24 @@ inline static uint64_t permutate56To48(uint64_t data, uint8_t perm_table[])
     return re;
 }
 
-inline static uint64_t permutate64To64(uint64_t data, uint8_t perm_table[])
+inline static uint64_t permutate64To64(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
 
     for (int i = 0; i < 64; i++) {
+        uint64_t v = (data & (1L << perm_table[i]));
+        v >>= perm_table[i];
+        v <<= i;
+        re |= v;
+    }
+    return re;
+}
+
+inline static uint64_t permutate32To48(uint32_t data, const uint8_t perm_table[])
+{
+    uint64_t re = 0;
+
+    for (int i = 0; i < 48; i++) {
         uint64_t v = (data & (1L << perm_table[i]));
         v >>= perm_table[i];
         v <<= i;
@@ -56,6 +69,8 @@ inline static uint32_t rol28(uint32_t data, uint8_t i)
 
 uint64_t doDES(uint64_t key, uint64_t data)
 {
+    printf("Get key: %lx\n", key);
+    printf("Get data: %lx\n", data);
     //1
     uint64_t K[17];
     K[0] = permutate64To56(key, host_PC1);
@@ -83,12 +98,26 @@ uint64_t doDES(uint64_t key, uint64_t data)
         L[i] = R[i - 1];
         R[i] = L[i - 1] ^ f(R[i - 1], K[i]);
     }
-    M = R[16] << 32;
+    M = R[16];
+    M <<= 32;
     M |= L[16];
+
+    printf("Encrypted to: %lx\n", permutate64To64(M, host_IP_INV));
     return permutate64To64(M, host_IP_INV);
 }
 
 uint32_t f(uint32_t data, uint64_t key)
 {
-    //TODO
+    uint64_t E = permutate32To48(data, host_E_BIT);
+    uint32_t re = 0;
+    E = E ^ key;
+#pragma unroll
+    for (unsigned int i = 0; i < 8; i++) {
+        uint64_t k = ((E & (1 << (5 + i * 6))) | ((E & (1 + i * 6)) << 4));
+        k -= 1;
+        k += __bextr_u64(E, 0x0400 | 1 + (i * 6)); //get 4 bits beginning from 1+(i*6)
+        re |= host_S[i][k];
+        re <<= 4;
+    }
+    return re;
 }

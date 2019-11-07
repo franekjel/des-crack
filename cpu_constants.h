@@ -7,21 +7,21 @@ I modified some tables (-1 to indexes)
 #include <cuda_runtime.h>
 #include <stdint.h>
 
-extern uint8_t host_PC1[56];
-extern uint8_t host_SHIFT[16];
-extern uint8_t host_PC2[48];
-extern uint8_t host_IP[64];
-extern uint8_t host_E_BIT[48];
+extern const uint8_t host_PC1[56];
+extern const uint8_t host_SHIFT[16];
+extern const uint8_t host_PC2[48];
+extern const uint8_t host_IP[64];
+extern const uint8_t host_E_BIT[48];
 
-extern uint8_t* host_S[8];
-extern uint8_t host_S1[64];
-extern uint8_t host_S2[64];
-extern uint8_t host_S3[64];
-extern uint8_t host_S4[64];
-extern uint8_t host_S5[64];
-extern uint8_t host_S6[64];
-extern uint8_t host_S7[64];
-extern uint8_t host_S8[64];
+extern const uint8_t* host_S[8];
+extern const uint8_t host_S1[64];
+extern const uint8_t host_S2[64];
+extern const uint8_t host_S3[64];
+extern const uint8_t host_S4[64];
+extern const uint8_t host_S5[64];
+extern const uint8_t host_S6[64];
+extern const uint8_t host_S7[64];
+extern const uint8_t host_S8[64];
 
-extern uint8_t host_P[32];
-extern uint8_t host_IP_INV[64];
+extern const uint8_t host_P[32];
+extern const uint8_t host_IP_INV[64];
