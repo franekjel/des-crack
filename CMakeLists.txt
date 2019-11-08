@@ -5,11 +5,11 @@ include_directories(/opt/cuda/include)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_COMPILER_IS_GNUCC TRUE)
-set(CMAKE_C_FLAGS -mbmi -O2)
+set(CMAKE_C_FLAGS "-O0 -g -march=native")
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 set(CMAKE_CUDA_COMPILER /opt/cuda/bin/nvcc)
-set(CUDA_NVCC_FLAGS -arch=sm_61;-G;-g;-rdc=true)
+set(CUDA_NVCC_FLAGS "-arch=sm_61 -g -G -rdc=true")
 
 file(GLOB SOURCES "main.c" "*.c" "*.cu" "*.h")
 add_executable(${PROJECT_NAME} ${SOURCES})

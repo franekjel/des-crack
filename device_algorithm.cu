@@ -9,6 +9,7 @@ __global__ void kernel()
 {
 }
 
-void crackDES(uint64_t encrypted, uint64_t decrypted)
+uint64_t crackDES(uint64_t encrypted, uint64_t decrypted)
 {
+    printf("Beginning cracking...\n");
 }

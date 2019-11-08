@@ -1,7 +1,6 @@
 /*
 constants for DES algorithm on CPU (same as in device_constants.h but without __device__ and named changed to host_*** to avoid name conflict)
 all data from https://billstclair.com/grabbe/des.htm (link from project description)
-I modified some tables (-1 to indexes)
 */
 #pragma once
 #include <cuda_runtime.h>
