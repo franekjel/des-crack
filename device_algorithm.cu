@@ -11,5 +11,5 @@ __global__ void kernel()
 
 uint64_t crackDES(uint64_t encrypted, uint64_t decrypted)
 {
-    printf("Beginning cracking...\n");
+    printf("Beginning cracking usign GPU...\n");
 }

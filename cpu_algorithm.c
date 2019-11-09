@@ -125,3 +125,49 @@ uint64_t doDES(uint64_t key, uint64_t data)
     M |= L[16];
     return permutate64To64(M, host_IP_INV);
 }
+
+uint64_t CPUCrackDES(uint64_t encrypted, uint64_t decrypted)
+{
+
+    printf("Usig CPU to crack DES. This may take a while...\n(To be honest this may take very long...)\n");
+    uint64_t key = 0; //this is becauese DES use 56bit key, we should not generate 8th,16th,24th... bits
+    for (int a = 0; a < 128; a++) {
+        for (int b = 0; b < 128; b++) {
+            for (int c = 0; c < 128; c++) {
+                for (int d = 0; d < 128; d++) {
+                    for (int e = 0; e < 128; e++) {
+                        for (int f = 0; f < 128; f++) {
+                            for (int g = 0; g < 128; g++) {
+                                for (int h = 0; h < 128; h++) {
+                                    if (doDES(key, decrypted) == encrypted)
+                                        return key;
+                                    key += 2; //with this we skip 64th bit
+                                }
+                                key -= (1 << 8);
+                                key += (1 << 9); //we ship 56th bit etc.
+                            }
+                            key -= (1 << 16);
+                            key += (1 << 17);
+                        }
+                        key -= (1 << 24);
+                        key += (1 << 25);
+                    }
+                    key -= (1L << 32);
+                    key += (1L << 33);
+                }
+                key -= (1L << 40);
+                key += (1L << 41);
+            }
+            key -= (1L << 48);
+            key += (1L << 49);
+        }
+        key -= (1L << 56);
+        key += (1L << 57);
+    }
+    /* simpler version but generates all 64bit keys (in fact DES use 56 bit key) so it is ~2^8 slower (by change k++ to k+=2 we ca achieve 2x performance, this is idea behind this huge for above)
+    while (doDES(key, decrypted) != encrypted) {
+        key ++;
+    }
+    */
+    return key;
+}
