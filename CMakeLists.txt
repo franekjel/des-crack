@@ -5,7 +5,7 @@ include_directories(/opt/cuda/include)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_COMPILER_IS_GNUCC TRUE)
-set(CMAKE_C_FLAGS "-O0 -g -march=native")
+set(CMAKE_C_FLAGS "-O2 -march=native")
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 set(CMAKE_CUDA_COMPILER /opt/cuda/bin/nvcc)

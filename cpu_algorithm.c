@@ -3,6 +3,8 @@
 inline static uint64_t permutate64To56(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
+#pragma GCC unroll 64
+#pragma GCC ivdep
     for (int i = 0; i < 56; i++) {
         uint64_t v = (data & (1L << (64 - perm_table[i])));
         v >>= (64 - perm_table[i]);
@@ -15,6 +17,8 @@ inline static uint64_t permutate64To56(uint64_t data, const uint8_t perm_table[]
 inline static uint64_t permutate56To48(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
+#pragma GCC unroll 64
+#pragma GCC ivdep
     for (int i = 0; i < 48; i++) {
         uint64_t v = (data & (1L << (56 - perm_table[i])));
         v >>= (56 - perm_table[i]);
@@ -27,6 +31,8 @@ inline static uint64_t permutate56To48(uint64_t data, const uint8_t perm_table[]
 inline static uint64_t permutate64To64(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
+#pragma GCC unroll 64
+#pragma GCC ivdep
     for (int i = 0; i < 64; i++) {
         uint64_t v = (data & (1L << (64 - perm_table[i])));
         v >>= (64 - perm_table[i]);
@@ -39,6 +45,8 @@ inline static uint64_t permutate64To64(uint64_t data, const uint8_t perm_table[]
 inline static uint64_t permutate32To48(uint32_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
+#pragma GCC unroll 64
+#pragma GCC ivdep
     for (int i = 0; i < 48; i++) {
         uint64_t v = (data & (1L << (32 - perm_table[i])));
         v >>= (32 - perm_table[i]);
@@ -51,6 +59,8 @@ inline static uint64_t permutate32To48(uint32_t data, const uint8_t perm_table[]
 inline static uint32_t permutate32To32(uint32_t data, const uint8_t perm_table[])
 {
     uint32_t re = 0;
+#pragma GCC unroll 64
+#pragma GCC ivdep
     for (int i = 0; i < 32; i++) {
         uint64_t v = (data & (1L << (32 - perm_table[i])));
         v >>= (32 - perm_table[i]);
@@ -81,7 +91,7 @@ uint32_t f(uint32_t data, uint64_t key)
     uint64_t E = permutate32To48(data, host_E_BIT);
     uint32_t re = 0;
     E = E ^ key;
-#pragma unroll
+#pragma GCC unroll 64
     for (unsigned int i = 0; i < 8; i++) {
         uint64_t k = ((E & (1L << (5 + (i * 6)))) >> (4 + (i * 6))) | ((E & (1L << (i * 6))) >> (i * 6));
         k <<= 4;
@@ -128,7 +138,6 @@ uint64_t doDES(uint64_t key, uint64_t data)
 
 uint64_t CPUCrackDES(uint64_t encrypted, uint64_t decrypted)
 {
-
     printf("Usig CPU to crack DES. This may take a while...\n(To be honest this may take very long...)\n");
     uint64_t key = 0; //this is becauese DES use 56bit key, we should not generate 8th,16th,24th... bits
     for (int a = 0; a < 128; a++) {
