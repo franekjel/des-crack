@@ -1,8 +1,9 @@
-#include "cpu_algorithm.h"
-#include "device_algorithm.cu"
-
 #include <time.h>
 #include <unistd.h>
+
+
+#include "cpu_algorithm.h"
+#include "device_algorithm.h"
 
 __no_return__ void usage(char* pname)
 {
@@ -81,7 +82,7 @@ int main(int argc, char* argv[])
 
     if (e && d) { //normal case, we want to find DES key
         if (device == 0)
-            key = crackDES(encryped, decrypted);
+            key = CUDACrackDES(encryped, decrypted);
         else
             key = CPUCrackDES(encryped, decrypted);
         printf("Found key: %lx\n", key);
@@ -98,7 +99,7 @@ int main(int argc, char* argv[])
     printf("Message encrypted: %lx\n", encryped);
 
     if (device == 0)
-        key = crackDES(encryped, decrypted);
+        key = CUDACrackDES(encryped, decrypted);
     else
         key = CPUCrackDES(encryped, decrypted);
     printf("Found key: %lx\n", key);

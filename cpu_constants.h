@@ -3,7 +3,6 @@ constants for DES algorithm on CPU (same as in device_constants.h but without __
 all data from https://billstclair.com/grabbe/des.htm (link from project description)
 */
 #pragma once
-#include <cuda_runtime.h>
 #include <stdint.h>
 
 extern const uint8_t host_PC1[56];

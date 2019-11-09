@@ -86,7 +86,7 @@ inline static uint32_t rol28(uint32_t data, uint8_t i)
     return data;
 }
 
-uint32_t f(uint32_t data, uint64_t key)
+static uint32_t f(uint32_t data, uint64_t key)
 {
     uint64_t E = permutate32To48(data, host_E_BIT);
     uint32_t re = 0;
