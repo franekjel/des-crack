@@ -1,7 +1,6 @@
 #include <time.h>
 #include <unistd.h>
 
-
 #include "cpu_algorithm.h"
 #include "device_algorithm.h"
 
@@ -42,17 +41,17 @@ int main(int argc, char* argv[])
     uint64_t key = 0;
     uint64_t decrypted = 0;
 
-    while ((c = getopt(argc, argv, "-:cde:d:s:")) != -1) {
+    while ((c = getopt(argc, argv, "-:cge:d:s:")) != -1) {
         switch (c) {
         case 'e': {
-            sscanf(optarg, "%lx", &encryped);
+            sscanf(optarg, "%llx", &encryped);
             if (e)
                 usage(argv[0]);
             e = 1;
             printf("Encrypted message: %lx\n", encryped);
         } break;
         case 'd': {
-            sscanf(optarg, "%lx", &decrypted);
+            sscanf(optarg, "%llx", &decrypted);
             if (d)
                 usage(argv[0]);
             d = 1;
@@ -97,11 +96,12 @@ int main(int argc, char* argv[])
     printf("Generated message: %lx\n", decrypted);
     encryped = doDES(key, decrypted);
     printf("Message encrypted: %lx\n", encryped);
-
+    unsigned long start = time(NULL);
     if (device == 0)
         key = CUDACrackDES(encryped, decrypted);
     else
         key = CPUCrackDES(encryped, decrypted);
     printf("Found key: %lx\n", key);
+    printf("Time: %lds\n", time(NULL) - start);
     return 0;
 }

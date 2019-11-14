@@ -1,18 +1,18 @@
 #include "device_algorithm.h"
 
-static __device__ uint64_t permutate64To56(uint64_t data, const uint8_t perm_table[])
+static __device__ __forceinline__ uint64_t permutate56To56(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
     for (int i = 0; i < 56; i++) {
-        uint64_t v = (data & (1L << (64 - perm_table[i])));
-        v >>= (64 - perm_table[i]);
+        uint64_t v = (data & (1L << (56 - perm_table[i])));
+        v >>= (56 - perm_table[i]);
         v <<= 55 - i;
         re |= v;
     }
     return re;
 }
 
-static __device__ uint64_t permutate56To48(uint64_t data, const uint8_t perm_table[])
+static __device__ __forceinline__ uint64_t permutate56To48(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
     for (int i = 0; i < 48; i++) {
@@ -24,7 +24,7 @@ static __device__ uint64_t permutate56To48(uint64_t data, const uint8_t perm_tab
     return re;
 }
 
-static __device__ uint64_t permutate64To64(uint64_t data, const uint8_t perm_table[])
+static __device__ __forceinline__ uint64_t permutate64To64(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
     for (int i = 0; i < 64; i++) {
@@ -36,7 +36,7 @@ static __device__ uint64_t permutate64To64(uint64_t data, const uint8_t perm_tab
     return re;
 }
 
-static __device__ uint64_t permutate32To48(uint32_t data, const uint8_t perm_table[])
+static __device__ __forceinline__ uint64_t permutate32To48(uint32_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
     for (int i = 0; i < 48; i++) {
@@ -48,7 +48,7 @@ static __device__ uint64_t permutate32To48(uint32_t data, const uint8_t perm_tab
     return re;
 }
 
-static __device__ uint32_t permutate32To32(uint32_t data, const uint8_t perm_table[])
+static __device__ __forceinline__ uint32_t permutate32To32(uint32_t data, const uint8_t perm_table[])
 {
     uint32_t re = 0;
     for (int i = 0; i < 32; i++) {
@@ -61,7 +61,7 @@ static __device__ uint32_t permutate32To32(uint32_t data, const uint8_t perm_tab
 }
 
 //roll 28bit variable left 1 or 2
-static __device__ uint32_t rol28(uint32_t data, uint8_t i)
+static __device__ __forceinline__ uint32_t rol28(uint32_t data, uint8_t i)
 {
     if (i == 1) {
         data <<= 1;
@@ -81,6 +81,7 @@ static __device__ uint32_t f(uint32_t data, uint64_t key)
     uint64_t E = permutate32To48(data, E_BIT);
     uint32_t re = 0;
     E = E ^ key;
+#pragma unroll
     for (unsigned int i = 0; i < 8; i++) {
         uint64_t k = ((E & (1L << (5 + (i * 6)))) >> (4 + (i * 6))) | ((E & (1L << (i * 6))) >> (i * 6));
         k <<= 4;
@@ -94,7 +95,7 @@ static __device__ uint64_t CUDAdoDES(uint64_t key, uint64_t data)
 {
     //1
     uint64_t K[17];
-    K[0] = permutate64To56(key, PC1);
+    K[0] = permutate56To56(key, PC1);
     uint32_t C[17];
     uint32_t D[17];
     C[0] = (K[0] & 0x00fffffff0000000L) >> 28;
@@ -125,17 +126,54 @@ static __device__ uint64_t CUDAdoDES(uint64_t key, uint64_t data)
     return permutate64To64(M, IP_INV);
 }
 
-static __device__ uint64_t key; //found key
-
-static __global__ void kernel(uint64_t encrypted, uint64_t decrypted)
+uint64_t expand56To64(uint64_t key)
 {
+    uint64_t re = 0;
+    for (int i = 0; i < 8; i++) {
+        uint64_t k = (key << (57 - 7 * i) >> 57);
+        re |= (k << ((i * 8) + 1));
+    }
+    return re;
+}
+
+static __device__ uint64_t FoundKey = (1L << 60);
+
+//__launch_bounds__(256) -slows down ~20% (64s->75s)
+__global__ void kernel(uint64_t encrypted, uint64_t decrypted, uint64_t k)
+{
+    if (FoundKey != (1L << 60))
+        return;
+    uint64_t key = k + blockIdx.x * (1 << 16); //each block check 2^16 keys
+    key += threadIdx.x * (1 << 8); //each thread check 256 (2^8) keys
+    for (int i = 0; i < 256; i++) {
+        if (CUDAdoDES(key + i, decrypted) == encrypted) {
+            FoundKey = key + i;
+        }
+    }
 }
 
 uint64_t CUDACrackDES(uint64_t encrypted, uint64_t decrypted)
 {
     printf("Beginning cracking usign GPU...\n");
-    unsigned int blockSize = 1 << 7;
-    unsigned int nBlock = 1;
-    kernel<<<nBlock, blockSize>>>(encrypted, decrypted);
+    /*  One thread crack 2^8 (change last 8 bits of given key)
+        256 threads/block 2^8
+        Grid size       2^16
+        2^56 - all possible keys
+    */
+    cudaFuncSetCacheConfig(kernel, cudaFuncCachePreferL1);
+    unsigned long start = time(NULL);
+    //printf("Start at: %ld\n", time(NULL));
+    unsigned int nBlock = 1 << 16;
+    for (uint64_t k = 0; k < (1L << 56); k += (1L << 32)) {
+        kernel<<<nBlock, 256>>>(encrypted, decrypted, k);
+        uint64_t key;
+        cudaDeviceSynchronize();
+        cudaMemcpyFromSymbol(&key, FoundKey, 8);
+        printf("Grid %ld: %lds\n", k >> 32, time(NULL) - start);
+        start = time(NULL);
+        if (key != (1L << 60)) {
+            return expand56To64(key);
+        }
+    }
     return 0;
 }
