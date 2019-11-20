@@ -5,6 +5,4 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "device_constants.h"
-
 u_int64_t CUDACrackDES(uint64_t encrypted, uint64_t decrypted);

@@ -1,5 +1,3 @@
-#include "device_constants.h"
-
 //modified to handle 56bit key
 __constant__ uint8_t PC1[56] = {
     50, 43, 36, 29, 22, 15, 8,
