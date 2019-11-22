@@ -1,13 +1,13 @@
 #include "cpu_algorithm.h"
 
-inline static uint64_t permutate64To56(uint64_t data, const uint8_t perm_table[])
+inline static uint64_t permutate56To56(uint64_t data, const uint8_t perm_table[])
 {
     uint64_t re = 0;
 #pragma GCC unroll 64
 #pragma GCC ivdep
     for (int i = 0; i < 56; i++) {
-        uint64_t v = (data & (1L << (64 - perm_table[i])));
-        v >>= (64 - perm_table[i]);
+        uint64_t v = (data & (1L << (56 - perm_table[i])));
+        v >>= (56 - perm_table[i]);
         v <<= 55 - i;
         re |= v;
     }
@@ -86,6 +86,16 @@ inline static uint32_t rol28(uint32_t data, uint8_t i)
     return data;
 }
 
+static uint64_t expand56To64(uint64_t key)
+{
+    uint64_t re = 0;
+    for (int i = 0; i < 8; i++) {
+        uint64_t k = (key << (57 - 7 * i) >> 57);
+        re |= (k << ((i * 8) + 1));
+    }
+    return re;
+}
+
 static uint32_t f(uint32_t data, uint64_t key)
 {
     uint64_t E = permutate32To48(data, host_E_BIT);
@@ -105,7 +115,7 @@ uint64_t doDES(uint64_t key, uint64_t data)
 {
     //1
     uint64_t K[17];
-    K[0] = permutate64To56(key, host_PC1);
+    K[0] = permutate56To56(key, host_PC1);
     uint32_t C[17];
     uint32_t D[17];
     C[0] = (K[0] & 0x00fffffff0000000L) >> 28;
@@ -139,44 +149,9 @@ uint64_t doDES(uint64_t key, uint64_t data)
 uint64_t CPUCrackDES(uint64_t encrypted, uint64_t decrypted)
 {
     printf("Usig CPU to crack DES. This may take a while...\n(To be honest this may take very long...)\n");
-    uint64_t key = 0; //this is becauese DES use 56bit key, we should not generate 8th,16th,24th... bits
-    for (int a = 0; a < 128; a++) {
-        for (int b = 0; b < 128; b++) {
-            for (int c = 0; c < 128; c++) {
-                for (int d = 0; d < 128; d++) {
-                    for (int e = 0; e < 128; e++) {
-                        for (int f = 0; f < 128; f++) {
-                            for (int g = 0; g < 128; g++) {
-                                for (int h = 0; h < 128; h++) {
-                                    if (doDES(key, decrypted) == encrypted)
-                                        return key;
-                                    key += 2; //with this we skip 64th bit
-                                }
-                                key -= (1 << 8);
-                                key += (1 << 9); //we ship 56th bit etc.
-                            }
-                            key -= (1 << 16);
-                            key += (1 << 17);
-                        }
-                        key -= (1 << 24);
-                        key += (1 << 25);
-                    }
-                    key -= (1L << 32);
-                    key += (1L << 33);
-                }
-                key -= (1L << 40);
-                key += (1L << 41);
-            }
-            key -= (1L << 48);
-            key += (1L << 49);
-        }
-        key -= (1L << 56);
-        key += (1L << 57);
+    for (uint64_t key = 0; key < (1ULL << 56); key++) {
+        if (doDES(key, decrypted) == encrypted)
+            return expand56To64(key);
     }
-    /* simpler version but generates all 64bit keys (in fact DES use 56 bit key) so it is ~2^8 slower (by change k++ to k+=2 we ca achieve 2x performance, this is idea behind this huge for above)
-    while (doDES(key, decrypted) != encrypted) {
-        key ++;
-    }
-    */
-    return key;
+    return 1ULL << 60;
 }

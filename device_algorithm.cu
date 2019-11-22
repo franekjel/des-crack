@@ -296,7 +296,7 @@ __device__ uint64_t CUDAdoDES(uint64_t key, uint64_t data)
     return permutate64To64(M, IP_INV);
 }
 
-uint64_t expand56To64(uint64_t key)
+static uint64_t expand56To64(uint64_t key)
 {
     uint64_t re = 0;
     for (int i = 0; i < 8; i++) {
@@ -306,12 +306,11 @@ uint64_t expand56To64(uint64_t key)
     return re;
 }
 
-__device__ uint64_t FoundKey = (1L << 60);
+__device__ uint64_t FoundKey = (1ULL << 60);
 
-//__launch_bounds__(256) -slows down ~20% (64s->75s)
 __global__ void __launch_bounds__(256) kernel(uint64_t encrypted, uint64_t decrypted, uint64_t k)
 {
-    if (FoundKey != (1L << 60))
+    if (FoundKey != (1ULL << 60))
         return;
     uint64_t key = k + blockIdx.x * (1 << 16); //each block check 2^16 keys
     key += threadIdx.x * (1 << 8); //each thread check 256 (2^8) keys
@@ -325,10 +324,11 @@ __global__ void __launch_bounds__(256) kernel(uint64_t encrypted, uint64_t decry
 uint64_t CUDACrackDES(uint64_t encrypted, uint64_t decrypted)
 {
     printf("Beginning cracking usign GPU...\n");
-    /*  One thread crack 2^8 (change last 8 bits of given key)
-        256 threads/block 2^8
-        Grid size       2^16
-        2^56 - all possible keys
+    /*  One thread crack:  2^8
+        256 threads/block: 2^8
+        Grid size:         2^16
+        Loop:              2^24
+        2^56 = all possible keys
     */
 
     cudaFuncSetCacheConfig(kernel, cudaFuncCachePreferL1);
