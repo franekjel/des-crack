@@ -324,6 +324,12 @@ __global__ void __launch_bounds__(256) kernel(uint64_t encrypted, uint64_t decry
 uint64_t CUDACrackDES(uint64_t encrypted, uint64_t decrypted)
 {
     printf("Beginning cracking usign GPU...\n");
+    float elapsed = 0;
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+
     /*  One thread crack:  2^8
         256 threads/block: 2^8
         Grid size:         2^16
@@ -332,21 +338,25 @@ uint64_t CUDACrackDES(uint64_t encrypted, uint64_t decrypted)
     */
 
     cudaFuncSetCacheConfig(kernel, cudaFuncCachePreferL1);
-    unsigned long start = time(NULL);
     unsigned int nBlock = 1 << 16;
     cudaProfilerStart();
+    uint64_t key;
     for (uint64_t k = 0; k < (1L << 56); k += (1L << 32)) {
         kernel<<<nBlock, 256>>>(encrypted, decrypted, k);
-        uint64_t key;
         cudaDeviceSynchronize();
         cudaMemcpyFromSymbol(&key, FoundKey, 8);
-        printf("Grid %ld: %lds\n", k >> 32, time(NULL) - start);
-        start = time(NULL);
-        if (key != (1L << 60)) {
-            cudaProfilerStop();
-            return expand56To64(key);
-        }
+        printf("Grid %ld done\n", k >> 32);
+        if (key != (1L << 60))
+            break;
     }
     cudaProfilerStop();
-    return 0;
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+
+    cudaEventElapsedTime(&elapsed, start, stop);
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+    printf("Time: %.2f s\n", elapsed / 1000.0);
+    return expand56To64(key);
 }

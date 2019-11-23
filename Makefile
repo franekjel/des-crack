@@ -1,7 +1,7 @@
 CUDAPATH = /opt/cuda
 CC = g++
 NVCC = $(CUDAPATH)/bin/nvcc
-CFLAGS =  -O2 -L$(CUDA_ROOT_DIR)/lib64 -I$(CUDAPATH)/include
+CFLAGS =  -O2 -I$(CUDAPATH)/include
 NVCCFLAGS = -O2 -maxrregcount 32 -m64 -arch=sm_61 -I$(CUDAPATH)/include -L$(CUDA_ROOT_DIR)/lib64
 
 C_HEADERS = cpu_constants.h cpu_algorithm.h

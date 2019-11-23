@@ -12,13 +12,13 @@ Program can operate in two modes:\n\
 -e <64byte>     encrypted message to decrypt\n\
 -d <64byte>     decrypted message\n\
 64byte means 64-byte hex number, like 6c6f6e6b0da074c8 (16 digits, [0-9a-f])\n\
-2. Generate key and then crack it. Optional parameter:\n\
--s <int>        RNG seed (optional)\n\
+2. Generate key of given length and then crack it. Parameter:\n\
+-s <int>        key size (1 - 64)\n\
 There is also flags without parameters: -c (CPU) and -g (GPU) indicating which algorithm program should use (default GPU)\n\
 Example:\n\
 %s -e 6c6f6e6b0da074c8 -d 797d226c6f6a6b00 -c   will find key which encrypt second argument into first using CPU\n\
 %s                                              with no parameters program will generate random data and try to break it using GPU\n\
-%s -s 3253                                      program will generate data based on given seed (useful to measure performance)",
+%s -s 26                                        program will generate 26-bit key and then crack it (useful to measure performance)\n",
         pname, pname, pname, pname);
     exit(EXIT_FAILURE);
 }
@@ -34,7 +34,7 @@ uint64_t rand64()
 
 int main(int argc, char* argv[])
 {
-    unsigned int seed = time(NULL);
+    unsigned int s = 0;
     int c;
     int e = 0, d = 0, device = 0; //0 GPU; 1 CPU
     uint64_t encryped = 0;
@@ -58,7 +58,9 @@ int main(int argc, char* argv[])
             printf("Decrypted message: %lx\n", decrypted);
         } break;
         case 's': {
-            sscanf(optarg, "%d", &seed);
+            sscanf(optarg, "%d", &s);
+            if (s < 1 || s > 64)
+                usage(argv[0]);
         } break;
         case 'c': {
             device = 1;
@@ -89,8 +91,9 @@ int main(int argc, char* argv[])
     }
 
     //there is no parameters or only -s - we want to generate key and then crack it
-    srand(seed);
+    srand(1234);
     key = rand64();
+    key >>= 64 - s;
     printf("Generated key: %lx\n", key);
     decrypted = rand64();
     printf("Generated message: %lx\n", decrypted);
@@ -99,9 +102,11 @@ int main(int argc, char* argv[])
     unsigned long start = time(NULL);
     if (device == 0)
         key = CUDACrackDES(encryped, decrypted);
-    else
+    else {
         key = CPUCrackDES(encryped, decrypted);
+        printf("Time: %ld s\n", time(NULL) - start);
+    }
     printf("Found key: %lx\n", key);
-    printf("Time: %lds\n", time(NULL) - start);
+
     return 0;
 }
